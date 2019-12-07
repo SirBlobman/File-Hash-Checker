@@ -2,7 +2,7 @@
 ![Program Screenshot 01](./.github/screenshot01.png?raw=true)
 
 File Hasher is a useful program that I use to check hases of files.  
-As of right now, the following hases are available:  
+As of right now, the following checksum types are available:
 * MD5
 * SHA-1
 * SHA-256
