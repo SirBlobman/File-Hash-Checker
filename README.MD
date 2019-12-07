@@ -1,5 +1,6 @@
 # File Hash Checker
 ![Program Screenshot 01](./.github/screenshot01.png?raw=true)
+![Program Screenshot 02](./.github/screenshot02.png?raw=true)
 
 File Hasher is a useful program that I use to check hases of files.  
 As of right now, the following checksum types are available:
