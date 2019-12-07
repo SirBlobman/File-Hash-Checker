@@ -7,6 +7,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -35,6 +36,8 @@ public class HashCheckerGUI extends JFrame {
         Container container = getContentPane();
         container.setLayout(null);
 
+        setupIcon();
+
         int textAlignmentRight = SwingConstants.RIGHT;
         int labelX = 2;
         createLabel("MD5 Hash:", 90, 20, labelX, 2, textAlignmentRight);
@@ -61,6 +64,15 @@ public class HashCheckerGUI extends JFrame {
 
     public void showGUI() {
         setVisible(true);
+    }
+
+    private void setupIcon() {
+        Class<?> clazz = getClass();
+        URL fileInJar = clazz.getResource("/assets/icon.png");
+        if(fileInJar == null) return;
+
+        ImageIcon icon = new ImageIcon(fileInJar);
+        setIconImage(icon.getImage());
     }
 
     private final Map<String, JTextField> idToTextFieldMap = new HashMap<>();

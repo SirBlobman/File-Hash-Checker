@@ -27,12 +27,12 @@ public class ProviderCRC32 extends MessageDigest {
 
     @Override
     protected byte[] engineDigest() {
-        long value = crc32.getValue();
+        long value = this.crc32.getValue();
         byte[] bytes = new byte[4];
         bytes[3] = (byte) ((value & 0xFF000000) >> 24);
         bytes[2] = (byte) ((value & 0x00FF0000) >> 16);
         bytes[1] = (byte) ((value & 0x0000FF00) >> 8);
-        bytes[0] = (byte) (value & 0x000000FF);
+        bytes[0] = (byte) ((value & 0x000000FF) >> 0);
         return bytes;
     }
 }
