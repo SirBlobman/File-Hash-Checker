@@ -9,4 +9,4 @@ As of right now, the following checksum types are available:
 * SHA-256
 * CRC32
 
-If you find any bugs please report them :)
+If you find any bugs please report them :smiley:
