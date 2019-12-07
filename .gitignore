@@ -1,0 +1,15 @@
+# Java
+*.class
+
+# Eclipse
+.settings/
+bin/
+.classpath
+.project
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Maven
+target/
