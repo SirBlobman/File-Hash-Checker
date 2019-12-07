@@ -1,4 +1,4 @@
-package com.gmail.rivera.ingram.file_hash_checker.gui;
+package com.SirBlobman.file_hash_checker.gui;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import javax.swing.*;
 
-import com.gmail.rivera.ingram.file_hash_checker.provider.ProviderCRC32;
+import com.SirBlobman.file_hash_checker.provider.ProviderCRC32;
 
 public class HashCheckerGUI extends JFrame {
     public HashCheckerGUI() {

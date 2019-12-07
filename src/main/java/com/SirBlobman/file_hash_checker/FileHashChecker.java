@@ -1,6 +1,6 @@
-package com.gmail.rivera.ingram.file_hash_checker;
+package com.SirBlobman.file_hash_checker;
 
-import com.gmail.rivera.ingram.file_hash_checker.gui.HashCheckerGUI;
+import com.SirBlobman.file_hash_checker.gui.HashCheckerGUI;
 
 public final class FileHashChecker {
     public static void main(String... args) {

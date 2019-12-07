@@ -34,7 +34,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.gmail.rivera.ingram.file_hash_checker.FileHashChecker</mainClass>
+                            <mainClass>com.SirBlobman.file_hash_checker.FileHashChecker</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -1,4 +1,4 @@
-package com.gmail.rivera.ingram.file_hash_checker.provider;
+package com.SirBlobman.file_hash_checker.provider;
 
 import java.security.MessageDigest;
 import java.util.zip.CRC32;
