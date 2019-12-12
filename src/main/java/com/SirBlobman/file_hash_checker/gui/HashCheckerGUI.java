@@ -3,25 +3,28 @@ package com.SirBlobman.file_hash_checker.gui;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.security.DigestInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.SirBlobman.file_hash_checker.provider.ProviderCRC32;
 
 public class HashCheckerGUI extends JFrame {
     public HashCheckerGUI() {
         super("File Hash Checker");
-        setSize(700, 250);
+        setSize(706, 250);
         setResizable(false);
         setLocation(0, 0);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -39,27 +42,33 @@ public class HashCheckerGUI extends JFrame {
         setupIcon();
 
         int textAlignmentRight = SwingConstants.RIGHT;
-        int labelX = 2;
-        createLabel("MD5 Hash:", 90, 20, labelX, 2, textAlignmentRight);
-        createLabel("SHA1 Hash:", 90, 20, labelX, 24, textAlignmentRight);
-        createLabel("SHA-256 Hash:", 90, 20, labelX, 46, textAlignmentRight);
-        createLabel("CRC32 Hash:", 90, 20, labelX, 68, textAlignmentRight);
-        createLabel("File Name:", 90, 20, labelX, 90, textAlignmentRight);
+        int labelX = 0;
+        int labelWidth = 100;
+        int labelHeight = 20;
+        createLabel("MD5 Hash:", labelWidth, labelHeight, labelX, 2, textAlignmentRight);
+        createLabel("SHA1 Hash:", labelWidth, labelHeight, labelX, 24, textAlignmentRight);
+        createLabel("SHA-256 Hash:", labelWidth, labelHeight, labelX, 46, textAlignmentRight);
+        createLabel("CRC32 Hash:", labelWidth, labelHeight, labelX, 68, textAlignmentRight);
+        createLabel("File Name:", labelWidth, labelHeight, labelX, 90, textAlignmentRight);
 
-        int textFieldX = 94;
-        createTextField("MD5-Hash", 595, 20, textFieldX, 2, false);
-        createTextField("SHA1-Hash", 595, 20, textFieldX, 24, false);
-        createTextField("SHA-256-Hash", 595, 20, textFieldX, 46, false);
-        createTextField("CRC32-Hash", 595, 20, textFieldX, 68, false);
-        createTextField("File-Name", 595, 20, textFieldX, 90, false);
+        int textFieldX = 100;
+        int textFieldWidth = 590;
+        int textFieldHeight = 20;
+        createTextField("MD5-Hash", textFieldWidth, textFieldHeight, textFieldX, 2, false);
+        createTextField("SHA1-Hash", textFieldWidth, textFieldHeight, textFieldX, 24, false);
+        createTextField("SHA-256-Hash", textFieldWidth, textFieldHeight, textFieldX, 46, false);
+        createTextField("CRC32-Hash", textFieldWidth, textFieldHeight, textFieldX, 68, false);
+        createTextField("File-Name", textFieldWidth, textFieldHeight, textFieldX, 90, false);
 
-        int buttonY = 120;
         Color lightBlue = new Color(0, 255, 255, 255);
         Color darkBlue = new Color(0, 0, 255, 255);
-        Color lightGreen = new Color(0, 255, 0, 255);
-        Color darkGreen = new Color(0, 128, 0, 255);
-        createButton("Choose File...", 150, 75, 100, buttonY, lightBlue, darkBlue, this::chooseFile);
-        createButton("Calculate Hashes", 150, 75, 375, buttonY, lightGreen, darkGreen, this::calculateHashes);
+        int buttonY = 120;
+        int buttonWidth = 175;
+        int buttonHeight = 75;
+        createButton("Choose File...", buttonWidth, buttonHeight, 0, buttonY, lightBlue, darkBlue, this::chooseFile);
+        createButton("Calculate Hashes", buttonWidth, buttonHeight, 175, buttonY, lightBlue, darkBlue, this::calculateHashes);
+        createButton("Reset", buttonWidth, buttonHeight, 350, buttonY, lightBlue, darkBlue, this::resetHashes);
+        createButton("Save Hashes", buttonWidth, buttonHeight, 525, buttonY, lightBlue, darkBlue, this::saveHashes);
     }
 
     public void showGUI() {
@@ -87,6 +96,9 @@ public class HashCheckerGUI extends JFrame {
         textField.setLocation(x, y);
         textField.setEditable(canEdit);
 
+        Font font = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+        textField.setFont(font);
+
         Container container = getContentPane();
         container.add(textField);
 
@@ -99,6 +111,9 @@ public class HashCheckerGUI extends JFrame {
         label.setLocation(x, y);
         label.setHorizontalAlignment(textAlign);
 
+        Font font = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+        label.setFont(font);
+
         Container container = getContentPane();
         container.add(label);
     }
@@ -110,7 +125,7 @@ public class HashCheckerGUI extends JFrame {
 
         button.setBackground(background);
         button.setForeground(foreground);
-        button.addActionListener(onClick);
+        if(onClick != null) button.addActionListener(onClick);
 
         Container container = getContentPane();
         container.add(button);
@@ -150,6 +165,55 @@ public class HashCheckerGUI extends JFrame {
         calculateHashSHA1();
         calculateHashSHA256();
         calculateHashCRC32();
+    }
+
+    private void resetHashes(ActionEvent e) {
+        for(JTextField textField : this.idToTextFieldMap.values()) textField.setText("");
+    }
+
+    private void saveHashes(ActionEvent e) {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("Text File", "txt");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setDialogType(JFileChooser.SAVE_DIALOG);
+        fileChooser.setSelectedFile(new File("hashes.txt"));
+
+        int action = fileChooser.showSaveDialog(this);
+        if(action == JFileChooser.APPROVE_OPTION) {
+            try {
+                File file = fileChooser.getSelectedFile();
+                if(!file.getName().endsWith(".txt")) file = new File(file.getParentFile(), file.getName() + ".txt");
+                file = file.getCanonicalFile();
+
+                if(!file.exists()) {
+                    file.getParentFile().mkdirs();
+                    file.createNewFile();
+                }
+
+                long timeLong = System.currentTimeMillis();
+                Date timeDate = new Date(timeLong);
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy hh:mm:ss.SSSa zzz");
+                String timeDateFormat = dateFormat.format(timeDate);
+
+                Path path = file.toPath();
+                List<String> lineList = Arrays.asList(
+                        "Time: " + timeLong + " " + timeDateFormat,
+                        "File Name: " + getTextField("File-Name").getText(),
+                        "MD5 Hash: " + getTextField("MD5-Hash").getText(),
+                        "SHA-1 Hash: " + getTextField("SHA1-Hash").getText(),
+                        "SHA-256 Hash: " + getTextField("SHA-256-Hash").getText(),
+                        "CRC32 Value: " + getTextField("CRC32-Hash").getText()
+                );
+                Files.write(path, lineList, StandardCharsets.UTF_8);
+
+                String message = "Successfully saved hash information to\n" + file;
+                JOptionPane.showMessageDialog(this, message);
+            } catch(IOException ex) {
+                String message = "An error occurred while saving the hashes to that file." + ex.getMessage();
+                JOptionPane.showMessageDialog(this, message, "I/O Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void calculateHashMD5() {
@@ -210,7 +274,7 @@ public class HashCheckerGUI extends JFrame {
 
     private String calculateHash(String hashType) {
         if(this.file == null || !this.file.exists()) return "I/O Error: No File Selected";
-        if(hashType.equals("CRC32")) return calculateCRC32();
+        if(hashType.equals("CRC32")) return ProviderCRC32.calculateHash(this.file);
 
         try {
             MessageDigest digest = MessageDigest.getInstance(hashType);
@@ -242,57 +306,5 @@ public class HashCheckerGUI extends JFrame {
         } catch(NoSuchAlgorithmException ex) {
             return "I/O Error: Could not get calculator for hash type '" + hashType + "'.";
         }
-    }
-
-    private String calculateCRC32() {
-        if(this.file == null || !this.file.exists()) return "I/O Error: No File Selected";
-
-        ProviderCRC32 algorithm = new ProviderCRC32();
-        algorithm.reset();
-
-        try {
-            FileInputStream stream = new FileInputStream(file);
-            BufferedInputStream buffer = new BufferedInputStream(stream);
-            DigestInputStream digest = new DigestInputStream(buffer, algorithm);
-            while(digest.read() != -1) doNothing();
-
-            StringBuilder hexString = new StringBuilder();
-            byte[] bytes = algorithm.digest();
-            for (byte value : bytes) {
-                String hexDigit = hexDigitCRC32(value);
-                hexString.append(hexDigit);
-                hexString.append(" ");
-            }
-
-            return hexString.toString();
-        } catch(IOException ex) {
-            return "I/O Error: " + ex.getLocalizedMessage();
-        }
-    }
-
-    private String hexDigitCRC32(byte value) {
-        StringBuilder buffer = new StringBuilder();
-        char character;
-        character = (char) ((value >> 4) & 0xF);
-        if(character > 9) {
-            character = (char) ((character - 10) + 'a');
-        } else {
-            character = (char) (character + '0');
-        }
-        buffer.append(character);
-
-        character = (char) (value & 0xF);
-        if(character > 9) {
-            character = (char) ((character - 10) + 'a');
-        } else {
-            character = (char) (character + '0');
-        }
-        buffer.append(character);
-
-        return buffer.toString();
-    }
-
-    private void doNothing() {
-        // Do Nothing
     }
 }
