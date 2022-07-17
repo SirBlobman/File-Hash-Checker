@@ -1,6 +1,6 @@
-package com.SirBlobman.file_hash_checker;
+package xyz.sirblobman.application.hash;
 
-import com.SirBlobman.file_hash_checker.gui.HashCheckerGUI;
+import xyz.sirblobman.application.hash.gui.HashCheckerGUI;
 
 public final class FileHashChecker {
     public static void main(String... args) {

@@ -1,4 +1,4 @@
-package com.SirBlobman.file_hash_checker.provider;
+package xyz.sirblobman.application.hash.provider;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,11 +7,10 @@ import java.util.zip.CRC32;
 
 public final class ProviderCRC32 {
     public static String calculateHash(File file) {
-        try {
-            CRC32 crc32 = new CRC32();
-            crc32.reset();
+        CRC32 crc32 = new CRC32();
+        crc32.reset();
 
-            FileInputStream stream = new FileInputStream(file);
+        try(FileInputStream stream = new FileInputStream(file)) {
             byte[] buffer = new byte[1024];
 
             int bytesRead;
@@ -22,7 +21,9 @@ public final class ProviderCRC32 {
             long value = crc32.getValue();
             return Long.toHexString(value);
         } catch(IOException ex) {
-            return "I/O Error: " + ex.getLocalizedMessage();
+            System.out.println("An error occurred while reading a file:");
+            ex.printStackTrace();
+            return "ERROR!";
         }
     }
 }
