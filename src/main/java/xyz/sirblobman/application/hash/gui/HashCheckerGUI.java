@@ -18,12 +18,15 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -34,6 +37,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import xyz.sirblobman.application.hash.provider.ProviderCRC32;
@@ -99,7 +103,7 @@ public class HashCheckerGUI extends JFrame {
         createButton("Calculate Hashes", buttonWidth, buttonHeight, 175, buttonY, lightBlue, darkBlue,
                 this::calculateHashes);
         createButton("Reset", buttonWidth, buttonHeight, 350, buttonY, lightBlue, darkBlue,
-                this::resetHashes);
+                e -> resetHashes(""));
         createButton("Save Hashes", buttonWidth, buttonHeight, 525, buttonY, lightBlue, darkBlue,
                 this::saveHashes);
     }
@@ -179,6 +183,22 @@ public class HashCheckerGUI extends JFrame {
         textFieldFileName.setText("");
 
         JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setAcceptAllFileFilterUsed(true);
+        fileChooser.setMultiSelectionEnabled(false);
+
+        FileFilter fileFilter = new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return (file.exists() && file.isFile());
+            }
+
+            @Override
+            public String getDescription() {
+                return "All Files";
+            }
+        };
+        fileChooser.setFileFilter(fileFilter);
+
         int action = fileChooser.showOpenDialog(this);
         if(action == JFileChooser.APPROVE_OPTION) {
             this.file = fileChooser.getSelectedFile();
@@ -190,6 +210,8 @@ public class HashCheckerGUI extends JFrame {
                     String message = "An error occurred, please choose a different file!";
                     JOptionPane.showMessageDialog(this, message, "I/O Error",
                             JOptionPane.ERROR_MESSAGE);
+                    textFieldFileName.setText("");
+                    this.file = null;
                 }
             }
         }
@@ -197,22 +219,34 @@ public class HashCheckerGUI extends JFrame {
 
     private void calculateHashes(ActionEvent e) {
         if(this.file == null || !this.file.exists()) {
-            String message = "You must choose a file before calculating hashes.";
-            JOptionPane.showMessageDialog(this, message, "I/O Error",
-                    JOptionPane.ERROR_MESSAGE);
+            String message = "You did not select a file.";
+            JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        calculateHashMD5();
-        calculateHashSHA1();
-        calculateHashSHA256();
-        calculateHashCRC32();
+        if (!this.file.isFile()) {
+            String message = "You must select a file, not a folder.";
+            JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        resetHashes("Calculating...");
+        updateHash("MD5");
+        updateHash("SHA1");
+        updateHash("SHA-256");
+        updateHash("CRC32");
     }
 
-    private void resetHashes(ActionEvent e) {
-        Collection<JTextField> textFieldCollection = this.idToTextFieldMap.values();
-        for(JTextField textField : textFieldCollection) {
-            textField.setText("");
+    private void resetHashes(String text) {
+        Set<Entry<String, JTextField>> entrySet = this.idToTextFieldMap.entrySet();
+        for (Entry<String, JTextField> entry : entrySet) {
+            String id = entry.getKey();
+            if (id.equals("File-Name")) {
+                continue;
+            }
+
+            JTextField textField = entry.getValue();
+            textField.setText(text);
         }
     }
 
@@ -260,60 +294,27 @@ public class HashCheckerGUI extends JFrame {
         }
     }
 
-    private void calculateHashMD5() {
-        JTextField textField = getTextField("MD5-Hash");
-        textField.setText("Calculating...");
+    private void updateHash(JTextField textField, String hash, Throwable error) {
+        if (error != null) {
+            String message = error.getLocalizedMessage();
+            textField.setText("Error: " + message);
+            return;
+        }
 
-        CompletableFuture.supplyAsync(() -> calculateHash("MD5")).whenComplete((string, error) -> {
-            if(error != null) {
-                String message = error.getLocalizedMessage();
-                textField.setText("Error: " + message);
-            }
+        if (hash == null) {
+            textField.setText("Error: null");
+            return;
+        }
 
-            textField.setText(string);
-        });
+        textField.setText(hash);
     }
 
-    private void calculateHashSHA1() {
-        JTextField textField = getTextField("SHA1-Hash");
-        textField.setText("Calculating...");
-
-        CompletableFuture.supplyAsync(() -> calculateHash("SHA1")).whenComplete((string, error) -> {
-            if(error != null) {
-                String message = error.getLocalizedMessage();
-                textField.setText("Error: " + message);
-            }
-
-            textField.setText(string);
-        });
-    }
-
-    private void calculateHashSHA256() {
-        JTextField textField = getTextField("SHA-256-Hash");
-        textField.setText("Calculating...");
-
-        CompletableFuture.supplyAsync(() -> calculateHash("SHA-256")).whenComplete((string, error) -> {
-            if(error != null) {
-                String message = error.getLocalizedMessage();
-                textField.setText("Error: " + message);
-            }
-
-            textField.setText(string);
-        });
-    }
-
-    private void calculateHashCRC32() {
-        JTextField textField = getTextField("CRC32-Hash");
-        textField.setText("Calculating...");
-
-        CompletableFuture.supplyAsync(() -> calculateHash("CRC32")).whenComplete((string, error) -> {
-            if(error != null) {
-                String message = error.getLocalizedMessage();
-                textField.setText("Error: " + message);
-            }
-
-            textField.setText(string);
-        });
+    private void updateHash(String hashType) {
+        String textFieldId = (hashType + "-Hash");
+        JTextField textField = getTextField(textFieldId);
+        Supplier<String> supplier = () -> calculateHash(hashType);
+        BiConsumer<String, Throwable> task = (hash, error) -> updateHash(textField, hash, error);
+        CompletableFuture.supplyAsync(supplier).whenCompleteAsync(task);
     }
 
     private String calculateHash(String hashType) {
@@ -326,34 +327,38 @@ public class HashCheckerGUI extends JFrame {
         }
 
         try {
-            MessageDigest digest = MessageDigest.getInstance(hashType);
-            digest.reset();
-
-            FileInputStream stream = new FileInputStream(this.file);
-
-            byte[] byteArray = new byte[1024];
-            int byteCount;
-            while((byteCount = stream.read(byteArray)) != -1) {
-                digest.update(byteArray, 0, byteCount);
-            }
-
-            stream.close();
-
-            byte[] bytes = digest.digest();
-            StringBuilder builder = new StringBuilder();
-            for (byte value : bytes) {
-                int andFF = (value & 0xFF);
-                int plus100 = (andFF + 0x100);
-                String intString = Integer.toString(plus100, 16);
-                String substring = intString.substring(1);
-                builder.append(substring);
-            }
-
-            return builder.toString();
+            return calculateDigestHash(hashType);
         } catch(IOException ex) {
             return "I/O Error: " + ex.getLocalizedMessage();
         } catch(NoSuchAlgorithmException ex) {
-            return "I/O Error: Could not get calculator for hash type '" + hashType + "'.";
+            return "Algorithm Error: Could not get calculator for hash type '" + hashType + "'.";
         }
+    }
+
+    private String calculateDigestHash(String hashType) throws IOException, NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance(hashType);
+        digest.reset();
+
+        FileInputStream stream = new FileInputStream(this.file);
+
+        int byteCount;
+        byte[] byteArray = new byte[1024];
+        while((byteCount = stream.read(byteArray)) != -1) {
+            digest.update(byteArray, 0, byteCount);
+        }
+
+        stream.close();
+
+        byte[] bytes = digest.digest();
+        StringBuilder builder = new StringBuilder();
+        for (byte value : bytes) {
+            int andFF = (value & 0xFF);
+            int plus100 = (andFF + 0x100);
+            String intString = Integer.toString(plus100, 16);
+            String substring = intString.substring(1);
+            builder.append(substring);
+        }
+
+        return builder.toString();
     }
 }
