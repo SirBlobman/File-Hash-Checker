@@ -37,7 +37,6 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import xyz.sirblobman.application.hash.provider.ProviderCRC32;
@@ -93,18 +92,19 @@ public class HashCheckerGUI extends JFrame {
         createTextField("File-Name", textFieldWidth, textFieldHeight, textFieldX, 90);
 
         int buttonY = 120;
-        int buttonWidth = 175;
+        int buttonWidth = 170;
         int buttonHeight = 75;
         Color lightBlue = new Color(0, 255, 255, 255);
         Color darkBlue = new Color(0, 0, 255, 255);
 
-        createButton("Choose File...", buttonWidth, buttonHeight, 0, buttonY, lightBlue, darkBlue,
+        int buttonX = 2;
+        createButton("Choose File...", buttonWidth, buttonHeight, buttonX, buttonY, lightBlue, darkBlue,
                 this::chooseFile);
-        createButton("Calculate Hashes", buttonWidth, buttonHeight, 175, buttonY, lightBlue, darkBlue,
+        createButton("Calculate Hashes", buttonWidth, buttonHeight, buttonX + buttonWidth + 2, buttonY, lightBlue, darkBlue,
                 this::calculateHashes);
-        createButton("Reset", buttonWidth, buttonHeight, 350, buttonY, lightBlue, darkBlue,
+        createButton("Reset", buttonWidth, buttonHeight, buttonX + 2*buttonWidth + 4, buttonY, lightBlue, darkBlue,
                 e -> resetHashes(""));
-        createButton("Save Hashes", buttonWidth, buttonHeight, 525, buttonY, lightBlue, darkBlue,
+        createButton("Save Hashes", buttonWidth, buttonHeight, buttonX + 3*buttonWidth + 6, buttonY, lightBlue, darkBlue,
                 this::saveHashes);
     }
 
@@ -185,19 +185,6 @@ public class HashCheckerGUI extends JFrame {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setAcceptAllFileFilterUsed(true);
         fileChooser.setMultiSelectionEnabled(false);
-
-        FileFilter fileFilter = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return (file.exists() && file.isFile());
-            }
-
-            @Override
-            public String getDescription() {
-                return "All Files";
-            }
-        };
-        fileChooser.setFileFilter(fileFilter);
 
         int action = fileChooser.showOpenDialog(this);
         if(action == JFileChooser.APPROVE_OPTION) {
