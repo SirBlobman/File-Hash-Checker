@@ -17,7 +17,7 @@ pipeline {
         stage("Gradle: Build") {
             steps {
                 withGradle {
-                    sh("./gradlew clean build --refresh-dependencies --no-daemon")
+                    sh("./gradlew --refresh-dependencies --no-daemon clean build")
                 }
             }
         }
