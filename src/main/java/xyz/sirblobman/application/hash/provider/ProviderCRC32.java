@@ -10,17 +10,17 @@ public final class ProviderCRC32 {
         CRC32 crc32 = new CRC32();
         crc32.reset();
 
-        try(FileInputStream stream = new FileInputStream(file)) {
+        try (FileInputStream stream = new FileInputStream(file)) {
             byte[] buffer = new byte[1024];
 
             int bytesRead;
-            while((bytesRead = stream.read(buffer)) != -1) {
+            while ((bytesRead = stream.read(buffer)) != -1) {
                 crc32.update(buffer, 0, bytesRead);
             }
 
             long value = crc32.getValue();
             return Long.toHexString(value);
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             System.out.println("An error occurred while reading a file:");
             ex.printStackTrace();
             return "ERROR!";

@@ -56,7 +56,7 @@ public class HashCheckerGUI extends JFrame {
         try {
             String lookAndFeel = UIManager.getSystemLookAndFeelClassName();
             UIManager.setLookAndFeel(lookAndFeel);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             System.out.println("Failed to set application look and feel:");
             ex.printStackTrace();
         }
@@ -98,14 +98,14 @@ public class HashCheckerGUI extends JFrame {
         Color darkBlue = new Color(0, 0, 255, 255);
 
         int buttonX = 2;
-        createButton("Choose File...", buttonWidth, buttonHeight, buttonX, buttonY, lightBlue, darkBlue,
-                this::chooseFile);
-        createButton("Calculate Hashes", buttonWidth, buttonHeight, buttonX + buttonWidth + 2, buttonY, lightBlue, darkBlue,
-                this::calculateHashes);
-        createButton("Reset", buttonWidth, buttonHeight, buttonX + 2*buttonWidth + 4, buttonY, lightBlue, darkBlue,
-                e -> resetHashes(""));
-        createButton("Save Hashes", buttonWidth, buttonHeight, buttonX + 3*buttonWidth + 6, buttonY, lightBlue, darkBlue,
-                this::saveHashes);
+        createButton("Choose File...", buttonWidth, buttonHeight, buttonX, buttonY,
+                lightBlue, darkBlue, this::chooseFile);
+        createButton("Calculate Hashes", buttonWidth, buttonHeight, buttonX + buttonWidth + 2, buttonY,
+                lightBlue, darkBlue, this::calculateHashes);
+        createButton("Reset", buttonWidth, buttonHeight, buttonX + 2 * buttonWidth + 4, buttonY,
+                lightBlue, darkBlue, e -> resetHashes(""));
+        createButton("Save Hashes", buttonWidth, buttonHeight, buttonX + 3 * buttonWidth + 6, buttonY,
+                lightBlue, darkBlue, this::saveHashes);
     }
 
     public void showGUI() {
@@ -115,7 +115,7 @@ public class HashCheckerGUI extends JFrame {
     private void setupIcon() {
         Class<?> thisClass = getClass();
         URL fileInJar = thisClass.getResource("/assets/icon.png");
-        if(fileInJar == null) {
+        if (fileInJar == null) {
             return;
         }
 
@@ -125,7 +125,7 @@ public class HashCheckerGUI extends JFrame {
     }
 
     private JTextField getTextField(String id) {
-        if(id == null) {
+        if (id == null) {
             return null;
         }
 
@@ -168,7 +168,7 @@ public class HashCheckerGUI extends JFrame {
 
         button.setBackground(background);
         button.setForeground(foreground);
-        if(clickAction != null) {
+        if (clickAction != null) {
             button.addActionListener(clickAction);
         }
 
@@ -187,13 +187,13 @@ public class HashCheckerGUI extends JFrame {
         fileChooser.setMultiSelectionEnabled(false);
 
         int action = fileChooser.showOpenDialog(this);
-        if(action == JFileChooser.APPROVE_OPTION) {
+        if (action == JFileChooser.APPROVE_OPTION) {
             this.file = fileChooser.getSelectedFile();
-            if(this.file != null) {
+            if (this.file != null) {
                 try {
                     String fileName = this.file.getCanonicalPath();
                     textFieldFileName.setText(fileName);
-                } catch(IOException ex) {
+                } catch (IOException ex) {
                     String message = "An error occurred, please choose a different file!";
                     JOptionPane.showMessageDialog(this, message, "I/O Error",
                             JOptionPane.ERROR_MESSAGE);
@@ -205,7 +205,7 @@ public class HashCheckerGUI extends JFrame {
     }
 
     private void calculateHashes(ActionEvent e) {
-        if(this.file == null || !this.file.exists()) {
+        if (this.file == null || !this.file.exists()) {
             String message = "You did not select a file.";
             JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -248,10 +248,10 @@ public class HashCheckerGUI extends JFrame {
         fileChooser.setSelectedFile(defaultFile);
 
         int action = fileChooser.showSaveDialog(this);
-        if(action == JFileChooser.APPROVE_OPTION) {
+        if (action == JFileChooser.APPROVE_OPTION) {
             try {
                 File selectedFile = fileChooser.getSelectedFile();
-                if(!selectedFile.exists() && !selectedFile.createNewFile()) {
+                if (!selectedFile.exists() && !selectedFile.createNewFile()) {
                     throw new IOException("Failed to create the file!");
                 }
 
@@ -273,7 +273,7 @@ public class HashCheckerGUI extends JFrame {
                 Files.write(path, lineList, StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING);
                 String message = "Successfully saved hash information to\n" + selectedFile;
                 JOptionPane.showMessageDialog(this, message);
-            } catch(IOException ex) {
+            } catch (IOException ex) {
                 String message = "An error occurred while saving the hashes to that file." + ex.getMessage();
                 JOptionPane.showMessageDialog(this, message, "I/O Error",
                         JOptionPane.ERROR_MESSAGE);
@@ -305,19 +305,19 @@ public class HashCheckerGUI extends JFrame {
     }
 
     private String calculateHash(String hashType) {
-        if(this.file == null || !this.file.exists()) {
+        if (this.file == null || !this.file.exists()) {
             return "I/O Error: No File Selected";
         }
 
-        if(hashType.equals("CRC32")) {
+        if (hashType.equals("CRC32")) {
             return ProviderCRC32.calculateHash(this.file);
         }
 
         try {
             return calculateDigestHash(hashType);
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             return "I/O Error: " + ex.getLocalizedMessage();
-        } catch(NoSuchAlgorithmException ex) {
+        } catch (NoSuchAlgorithmException ex) {
             return "Algorithm Error: Could not get calculator for hash type '" + hashType + "'.";
         }
     }
@@ -330,7 +330,7 @@ public class HashCheckerGUI extends JFrame {
 
         int byteCount;
         byte[] byteArray = new byte[1024];
-        while((byteCount = stream.read(byteArray)) != -1) {
+        while ((byteCount = stream.read(byteArray)) != -1) {
             digest.update(byteArray, 0, byteCount);
         }
 
